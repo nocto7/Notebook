@@ -38,8 +38,27 @@ class TableViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let note = notes[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "Note", for: indexPath)
-        cell.textLabel?.text = notes[indexPath.row].title
+        cell.textLabel?.text = note.title
+        
+        let dateCreated = note.dateCreated
+        let dateNow = Date()
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_GB")
+        formatter.dateStyle = .medium
+        var dateString = formatter.string(from: dateCreated)
+        if  dateString == formatter.string(from: dateNow) {
+            formatter.dateStyle = .none
+            formatter.timeStyle = .short
+            dateString = formatter.string(from: dateCreated)
+        }
+        if let firstStop = note.text.firstIndex(of: ".") {
+            cell.detailTextLabel?.text = dateString + " " + note.text[..<firstStop]
+        } else {
+            cell.detailTextLabel?.text = dateString
+        }
+        
         return cell
     }
     

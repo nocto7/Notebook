@@ -11,21 +11,30 @@ import UIKit
 class NoteViewController: UIViewController, UIActivityItemSource {
     var note: Note!
     weak var delegate: TableViewController! // https://www.hackingwithswift.com/example-code/system/how-to-pass-data-between-two-view-controllers
+    
+    @IBOutlet var noteTitleButton: UIButton!
     @IBOutlet var noteText: UITextView!
-    @IBOutlet var noteTitle: UILabel!
     @IBOutlet var noteDate: UILabel!
+    
+    @IBAction func titlePressed(_ sender: UIButton) {
+        edit()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        noteTitle.text = note.title
-        noteDate.text = "Created: \(note.dateCreated)"
+        noteTitleButton.setTitle(note.title, for: .normal)
         noteText.text =  note.text
         
+        let formatter = DateFormatter()
+        formatter.dateStyle = .full
+        formatter.timeStyle = .short
+        noteDate.text = "Created on \(formatter.string(from: note.dateCreated))"
+
+        
         let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(save))
-        let editButton = UIBarButtonItem(title: "Edit Title", style: .plain, target: self, action: #selector(edit))
         let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(share))
-        navigationItem.rightBarButtonItems = [saveButton, editButton, shareButton]
+        navigationItem.rightBarButtonItems = [shareButton, saveButton]
         
         // fixing keyboard prob
         let notificationCenter = NotificationCenter.default
@@ -53,7 +62,7 @@ class NoteViewController: UIViewController, UIActivityItemSource {
             [weak self] _ in
             guard let newTitle = ac.textFields?[0].text else { return }
             self?.note.title = newTitle
-            self?.noteTitle.text = self?.note.title
+            self?.noteTitleButton.setTitle(self?.note.title, for: .normal)
         }
         ac.addAction(editAction)
         
