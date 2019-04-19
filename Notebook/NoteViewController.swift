@@ -26,6 +26,11 @@ class NoteViewController: UIViewController, UIActivityItemSource {
         let editButton = UIBarButtonItem(title: "Edit Title", style: .plain, target: self, action: #selector(edit))
         let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(share))
         navigationItem.rightBarButtonItems = [saveButton, editButton, shareButton]
+        
+        // fixing keyboard prob
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillHideNotification, object: nil)
+        notificationCenter.addObserver(self, selector: #selector(adjustForKeyboard), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
     @objc func save() {
@@ -77,5 +82,23 @@ class NoteViewController: UIViewController, UIActivityItemSource {
     
     func activityViewController(_ activityViewController: UIActivityViewController, subjectForActivityType activityType: UIActivity.ActivityType?) -> String {
         return note.title
+    }
+    
+    @objc func adjustForKeyboard(notification: Notification) {
+        guard let keyboardValue = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue else { return }
+        
+        let keyboardScreenEndFrame = keyboardValue.cgRectValue
+        let keyboardViewEndFrame = view.convert(keyboardScreenEndFrame, from: view.window)
+        
+        if notification.name == UIResponder.keyboardWillHideNotification {
+            noteText.contentInset = .zero
+        } else {
+            noteText.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: keyboardViewEndFrame.height - view.safeAreaInsets.bottom, right: 0)
+        }
+        
+        noteText.scrollIndicatorInsets = noteText.contentInset
+        
+        let selectedRange = noteText.selectedRange
+        noteText.scrollRangeToVisible(selectedRange)
     }
 }
