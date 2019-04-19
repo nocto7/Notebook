@@ -8,7 +8,7 @@
 
 import UIKit
 
-class NoteViewController: UIViewController {
+class NoteViewController: UIViewController, UIActivityItemSource {
     var note: Note!
     weak var delegate: TableViewController! // https://www.hackingwithswift.com/example-code/system/how-to-pass-data-between-two-view-controllers
     @IBOutlet var noteText: UITextView!
@@ -24,13 +24,18 @@ class NoteViewController: UIViewController {
         
         let saveButton = UIBarButtonItem(barButtonSystemItem: .save, target: self, action: #selector(save))
         let editButton = UIBarButtonItem(title: "Edit Title", style: .plain, target: self, action: #selector(edit))
-        navigationItem.rightBarButtonItems = [saveButton, editButton]
+        let shareButton = UIBarButtonItem(barButtonSystemItem: .action, target: self, action: #selector(share))
+        navigationItem.rightBarButtonItems = [saveButton, editButton, shareButton]
     }
     
     @objc func save() {
+        saveText()
+        navigationController?.popViewController(animated: true)
+    }
+    
+    func saveText() {
         note.text = noteText.text
         delegate.updateNotes(note: note)
-        navigationController?.popViewController(animated: true)
     }
     
     @objc func edit() {
@@ -53,7 +58,24 @@ class NoteViewController: UIViewController {
         present(ac, animated: true)
     }
     
-
+    // https://www.hackingwithswift.com/articles/118/uiactivityviewcontroller-by-example
+    @objc func share() {
+        saveText()
+        let items = [self]
+        let ac = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        ac.popoverPresentationController?.barButtonItem = navigationItem.rightBarButtonItem
+        present(ac, animated: true)
+    }
  
-
+    func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any {
+        return note.text
+    }
+    
+    func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
+        return note.text
+    }
+    
+    func activityViewController(_ activityViewController: UIActivityViewController, subjectForActivityType activityType: UIActivity.ActivityType?) -> String {
+        return note.title
+    }
 }

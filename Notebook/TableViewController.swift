@@ -10,10 +10,16 @@ import UIKit
 
 class TableViewController: UITableViewController {
     
-    var notes = [Note]()
+    var notes = [Note]() {
+        didSet {
+            saveNotes()
+        }
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        readNotes()
         
         let composeButton = UIBarButtonItem(barButtonSystemItem: .compose, target: self, action: #selector(composeNote))
         
@@ -42,6 +48,15 @@ class TableViewController: UITableViewController {
         editNote(note: note)
     }
     
+    // https://www.hackingwithswift.com/example-code/uikit/how-to-swipe-to-delete-uitableviewcells
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete {
+            notes.remove(at: indexPath.row)
+            tableView.deleteRows(at: [indexPath], with: .fade)
+            saveNotes()
+        }
+    }
+    
     func editNote(note: Note) {
         if let nvc = storyboard?.instantiateViewController(withIdentifier: "Note") as? NoteViewController {
             nvc.note = note
@@ -59,8 +74,32 @@ class TableViewController: UITableViewController {
                 }
             }
         }
+        saveNotes()
         tableView.reloadData()
     }
-
+    
+    func saveNotes() {
+        let jsonEncoder = JSONEncoder()
+        if let savedData = try? jsonEncoder.encode(notes) {
+            let defaults = UserDefaults.standard
+            defaults.set(savedData, forKey: "NotebookNotes")
+        } else {
+            print("Failed to save notes.")
+        }
+    }
+    
+    func readNotes() {
+        let defaults = UserDefaults.standard
+        
+        if let savedData = defaults.object(forKey: "NotebookNotes") as? Data {
+            let jsonDecoder = JSONDecoder()
+            
+            do {
+                notes = try jsonDecoder.decode([Note].self, from: savedData)
+            } catch {
+                print("Failed to load notes")
+            }
+        }
+    }
 }
 
